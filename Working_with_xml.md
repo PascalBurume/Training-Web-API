@@ -321,3 +321,112 @@ public class Startup
         var xmlDirectory = Configuration["DataDirectories:Xml"];
     }
 }
+```
+
+This setup allows your application to be modular and configurable, with settings that can be changed without modifying the code, making it easier to adapt to different environments like development, testing, and production.
+
+# Projet A: Service de Traitement des Données
+Ce projet est chargé de la lecture, du traitement et de l'intégration des données XML dans une base de données locale. Voici les grandes lignes de son fonctionnement :
+
+- **Lecture des fichiers XML :** Le service surveille un répertoire spécifié pour détecter de nouveaux fichiers XML. Ce chemin peut être configuré dans le fichier `appsettings.json` sous `DataDirectories:Xml`.
+
+- **Désérialisation des données XML :** Lorsque de nouveaux fichiers sont détectés, ils sont lus et les données XML sont désérialisées en objets C# à l'aide de la classe `XmlSerializer`, qui convertit les éléments XML en objets C# basés sur des modèles prédéfinis.
+
+- **Stockage des données :** Après la conversion des données en objets, elles sont stockées dans une base de données SQL Server locale. Les informations de connexion à cette base sont configurées dans `ConnectionStrings` dans `appsettings.json`.
+
+- **Traitement continu :** Le service fonctionne en continu, vérifiant périodiquement la présence de nouveaux fichiers XML à traiter. Cette vérification est configurée pour s'exécuter à des intervalles réguliers, par exemple, toutes les minutes.
+
+# Projet B: API pour Exposer les Données
+Une fois les données stockées dans la base de données locale, le Projet B les rend accessibles via une API RESTful. Voici les principales caractéristiques de ce projet :
+
+- **Endpoints API :** Des endpoints tels que GET, POST, PUT et DELETE sont mis en place pour permettre aux utilisateurs ou aux systèmes clients de récupérer, ajouter, modifier ou supprimer des données. Chaque endpoint correspond à une opération spécifique sur les données.
+
+- **Sérialisation JSON :** Lorsqu'une requête est faite à l'API, les données récupérées de la base de données sont sérialisées en JSON avant d'être renvoyées au client, facilitant ainsi l'intégration avec d'autres systèmes ou applications frontales.
+
+- **Gestion des erreurs :** L'API gère les erreurs telles que les entrées non trouvées ou les erreurs de serveur interne, en renvoyant des réponses appropriées, y compris des codes d'état HTTP et des messages d'erreur clairs.
+
+- **Sécurité et Autorisation :** Pour une application en production, il est possible d'ajouter des couches de sécurité, comme l'authentification et l'autorisation, pour contrôler l'accès aux données exposées par l'API.
+
+## Intégration et Flux de Données
+Le flux de données commence avec l'importation de fichiers XML dans le système (Projet A), où ils sont traités et stockés dans la base de données. Ces données peuvent ensuite être consultées et manipulées via l'API RESTful (Projet B), permettant une interaction externe avec les données.
+
+## Conclusion
+Cette configuration assure une séparation claire des responsabilités : le Projet A s'occupe du traitement interne des données, tandis que le Projet B agit comme interface pour les interactions externes avec ces données. Cette architecture organise de manière efficace le flux de travail, rendant le système à la fois évolutif et facile à maintenir.
+
+# Gestion du Stockage des Données et du Traitement Continu dans une Application ASP.NET Core
+
+Pour mieux comprendre le fonctionnement interne de l'application, notamment en ce qui concerne le stockage des données et le traitement continu, examinons des extraits de code spécifiques à chaque fonctionnalité. L'application utilise ASP.NET Core avec Entity Framework Core pour la gestion de la base de données.
+
+## Stockage des Données
+
+Le stockage des données dans une base de données SQL Server locale est réalisé via Entity Framework Core. La configuration et l'utilisation de ce framework sont détaillées ci-dessous :
+
+### Configuration de la Base de Données
+
+Dans `Startup.cs` ou `Program.cs`, la base de données est configurée comme suit :
+
+```csharp
+services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+```
+
+- `AddDbContext<ApplicationDbContext>` : Ajoute le contexte de la base de données comme service dans l'application. `ApplicationDbContext` est une classe qui étend `DbContext` d'Entity Framework Core et configure les modèles de données et leurs relations.
+- `UseSqlServer` : Configure le contexte pour utiliser SQL Server avec la chaîne de connexion fournie.
+
+#### Extrait de `appsettings.json`
+
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=DataIntegrationDb;Trusted_Connection=True;MultipleActiveResultSets=true"
+}
+```
+
+Cette chaîne de connexion, `DefaultConnection`, est utilisée pour connecter l'application à SQL Server, spécifiant le serveur de base de données (LocalDB ici), le nom de la base de données, et d'autres paramètres comme l'utilisation de l'authentification Windows et l'activation de plusieurs ensembles de résultats actifs simultanément.
+
+### Sauvegarde des Données
+
+```csharp
+var announcement = DeserializeXml<Announcement>(xmlData);
+_context.Announcements.Add(announcement);
+await _context.SaveChangesAsync();
+```
+
+- `DeserializeXml<Announcement>` : Convertit les données XML en objet `Announcement`.
+- `_context.Announcements.Add(announcement)` : Ajoute l'objet `Announcement` au contexte de la base de données.
+- `_context.SaveChangesAsync()` : Enregistre toutes les modifications apportées dans le contexte de la base de données à la base de données SQL Server, réalisant ainsi le stockage des données.
+
+## Traitement Continu
+
+Le traitement continu est assuré par un service en arrière-plan dans ASP.NET Core, qui vérifie régulièrement les nouveaux fichiers XML pour les traiter.
+
+### Configuration du Service en Arrière-Plan
+
+Dans `Program.cs`, le service en arrière-plan est configuré comme suit :
+
+```csharp
+services.AddHostedService<DataIntegrationService>();
+```
+
+- `AddHostedService<DataIntegrationService>` : Enregistre le service `DataIntegrationService` comme un service en arrière-plan qui démarre avec l'application et s'exécute jusqu'à ce que l'application s'arrête.
+
+### Implémentation du Service en Arrière-Plan
+
+```csharp
+protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+{
+    while (!stoppingToken.IsCancellationRequested)
+    {
+        _logger.LogInformation("Data Integration Service running at: {time}", DateTimeOffset.Now);
+        await ProcessXmlData();
+        await Task.Delay(60000, stoppingToken); // Delay for 1 minute
+    }
+}
+```
+
+- `ExecuteAsync` : Cette méthode est appelée lorsque le service en arrière-plan démarre. Elle exécute une boucle qui continue tant que l'application s'exécute.
+- `ProcessXmlData` : Méthode qui traite les fichiers XML.
+- `Task.Delay` : Attend une minute avant de vérifier à nouveau les fichiers, permettant au service de ne pas monopoliser les ressources et de vérifier les nouveaux fichiers périodiquement.
+
+## Conclusion
+
+Ces extraits illustrent comment les données sont stockées de manière persistante dans une base de données et comment un service en arrière-plan peut traiter les données de manière continue, en vérifiant les nouveaux fichiers XML à intervalles réguliers. Ce modèle est typique pour les applications de traitement de données en lot et les systèmes d'intégration continue.
