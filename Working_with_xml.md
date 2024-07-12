@@ -1,5 +1,29 @@
 # Data Integration and API Exposure using ASP.NET Core
 
+## Création d'une Base de Données avec ASP.NET Core pour SEGUCE et DGDA
+
+Pour mettre en place une base de données capable de stocker des données pour SEGUCE et DGDA, y compris les données XML et Excel, ainsi que les mouvements d'entrée OCC, suivez les étapes détaillées ci-dessous :
+
+## Étape 1 : Créer un Nouveau Projet ASP.NET Core
+
+1. **Ouvrez Visual Studio.**
+2. **Créez un nouveau projet ASP.NET Core Web Application.**
+   - Lancez Visual Studio et sélectionnez `Créer un nouveau projet`.
+   - Recherchez `ASP.NET Core Web Application`, sélectionnez-le, puis cliquez sur `Suivant`.
+   - Nommez votre projet et choisissez l'emplacement de sauvegarde, puis cliquez sur `Créer`.
+3. **Choisissez un modèle "API" ou "MVC" selon vos besoins.**
+   - Dans la fenêtre `Créer une nouvelle application web ASP.NET Core`, sélectionnez soit le modèle `API`, soit `MVC` en fonction de l'architecture de votre application.
+
+## Étape 2 : Configurer Entity Framework Core
+
+1. **Installez les packages NuGet nécessaires pour Entity Framework Core.**
+   - Dans Visual Studio, ouvrez le gestionnaire de package NuGet en cliquant avec le bouton droit sur votre projet dans l'explorateur de solutions, puis sélectionnez `Gérer les packages NuGet`.
+   - Recherchez et installez les packages suivants :
+     - `Microsoft.EntityFrameworkCore` : Le framework ORM pour accéder à la base de données.
+     - `Microsoft.EntityFrameworkCore.SqlServer` : Le provider Entity Framework Core pour SQL Server.
+     - `Microsoft.EntityFrameworkCore.Tools` : Outils utiles pour le développement avec EF Core.
+
+Après avoir configuré votre projet ASP.NET Core et installé les packages nécessaires pour Entity Framework Core, vous êtes prêt à commencer le développement de votre application pour gérer et stocker des données SEGUCE et DGDA, y compris le traitement des fichiers XML et Excel ainsi que la gestion des mouvements d'entrée OCC.
 ## Project A: Service
 
 ### 1. Data Models
