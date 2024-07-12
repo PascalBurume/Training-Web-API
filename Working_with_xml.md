@@ -273,7 +273,7 @@ This is a custom key representing the directory where XML files are stored. The 
 "DataDirectories": {
   "Xml": "C:\\Path\\To\\XmlFiles"
 }
-
+```
 # Logging
 
 The Logging section specifies how the application logs runtime events. ASP.NET Core uses `Microsoft.Extensions.Logging` to log various events, and settings here define the behavior of these logs.
@@ -296,13 +296,13 @@ Controls the level of logging that is enabled.
     }
   }
 }
-
+```
 # Applying the Configuration in the Application
 
 These configurations are typically accessed in the application through the `IConfiguration` interface, which is injected into services or options where needed.
 
-```charp
-    public class Startup
+```csharp
+public class Startup
 {
     public IConfiguration Configuration { get; }
 
@@ -321,7 +321,3 @@ These configurations are typically accessed in the application through the `ICon
         var xmlDirectory = Configuration["DataDirectories:Xml"];
     }
 }
-
-```
-
-This setup allows your application to be modular and configurable, with settings that can be changed without modifying the code, making it easier to adapt to different environments like development, testing, and production.
